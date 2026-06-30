@@ -239,6 +239,64 @@ class Backend:
             return proc.returncode, ""
 
 # ---------------------------------------------------------------------------
+# AppArmor (Fedora/Ubuntu/Debian costumam ter um perfil php-fpm que bloqueia
+# o servidor mesmo rodando dentro do container — corrige automaticamente)
+# ---------------------------------------------------------------------------
+APPARMOR_OVERRIDE = """  # Allow access to the Outbreak DNAS server web root (auto-added by setup app)
+  /var/www/dnas/ r,
+  /var/www/dnas/** rmix,
+  /var/www/bhof1/ r,
+  /var/www/bhof1/** rmix,
+  /var/www/bhof2/ r,
+  /var/www/bhof2/** rmix,
+"""
+
+def fix_apparmor_if_needed(sudo_pw, log_func=None):
+    """Se o host tiver AppArmor com um perfil php-fpm, libera os caminhos
+    do servidor automaticamente (sem isso o login do jogo trava com 403)."""
+    if not IS_LINUX:
+        return
+    if not shutil.which("aa-status") and not os.path.isdir("/etc/apparmor.d"):
+        return  # AppArmor não instalado nesse sistema, nada a fazer
+    profile_path = "/etc/apparmor.d/php-fpm"
+    found = os.path.exists(profile_path)
+    if not found:
+        for alt in ["/etc/apparmor.d/usr.sbin.php-fpm7.4", "/etc/apparmor.d/usr.sbin.php-fpm"]:
+            if os.path.exists(alt):
+                profile_path = alt
+                found = True
+                break
+    if not found:
+        return  # sem perfil php-fpm confinando nada, não precisa de override
+
+    override_path = "/etc/apparmor.d/local/php-fpm"
+    try:
+        with open("/tmp/_outbreak_apparmor_override", "w") as f:
+            f.write(APPARMOR_OVERRIDE)
+    except Exception:
+        return
+
+    if log_func:
+        log_func("🛡  Detectado AppArmor com perfil php-fpm — liberando acesso automaticamente...")
+
+    cmd = (
+        "mkdir -p /etc/apparmor.d/local && "
+        f"cp /tmp/_outbreak_apparmor_override {override_path} && "
+        f"apparmor_parser -r {profile_path}"
+    )
+    proc = subprocess.Popen(
+        ["sudo", "-S", "bash", "-c", cmd],
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+    )
+    out, _ = proc.communicate(input=(sudo_pw + "\n") if sudo_pw else None)
+    if log_func:
+        for line in out.splitlines():
+            if line.strip() and "password" not in line.lower():
+                log_func(line.strip())
+    if proc.returncode == 0 and log_func:
+        log_func("✅ AppArmor configurado — login do jogo não vai travar com erro 403.")
+
+# ---------------------------------------------------------------------------
 # Instalação de dependências
 # ---------------------------------------------------------------------------
 def detect_package_manager():
@@ -605,6 +663,8 @@ class OutbreakServerApp(tk.Tk):
         rc, _ = b.build_image(self._log)
         if rc == 0:
             self._log("✅ Imagem construída com sucesso!", "#40e060")
+            if IS_LINUX:
+                fix_apparmor_if_needed(self.pw_var.get(), self._log)
         else:
             self._log(f"❌ Build falhou (código {rc})", "#e04040")
         self._refresh_status()
