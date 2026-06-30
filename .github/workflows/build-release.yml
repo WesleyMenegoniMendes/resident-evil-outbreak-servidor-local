@@ -159,7 +159,15 @@ jobs:
         with:
           name: "Servidor RE Outbreak ${{ github.ref_name }}"
           body: |
-            ## 📥 Download Direto (clique e baixe, sem precisar de Git)
+            # 🧟 Servidor Privado — Resident Evil Outbreak File #1 e #2
+
+            Crie seu próprio servidor pra jogar Resident Evil Outbreak online com amigos — **sem depender do servidor oficial (obsrv.org), que fica nos EUA e causa lag, queda de conexão e zumbi "teleportando"**.
+
+            Feito pra qualquer pessoa conseguir criar o servidor com poucos cliques, **mesmo sem entender nada de programação ou servidores**.
+
+            ---
+
+            ## 📥 Download
 
             | Sistema | Link |
             |---------|------|
@@ -168,56 +176,79 @@ jobs:
 
             ---
 
-            ## Servidor Privado — Resident Evil Outbreak File #1 e #2
+            ## 🚀 Passo a passo (poucos cliques, sem precisar entender nada)
 
-            **Foco do projeto:** jogar com seus amigos em um servidor próprio, sem depender do servidor oficial (obsrv.org) que fica nos EUA. Com o servidor local, o ping é o ping direto entre você e seus amigos — sem zumbi teleportando, sem queda de conexão.
+            ### 1. Baixe e extraia
+            Baixe o `.zip` do seu sistema (link acima) e **extraia a pasta inteira** em qualquer lugar do seu PC (ex: Área de Trabalho).
 
-            ---
+            ### 2. Abra o programa
+            - **Windows:** dê duplo clique em `Servidor-RE-Outbreak.exe`
+            - **Linux:** dê duplo clique em **"Abrir Servidor.desktop"** (se pedir confirmação de "executar", confirme) — ou abra um terminal na pasta e rode `./abrir-servidor.sh`. Veja `LEIA-ME.txt` se tiver dúvida.
 
-            ### Sistema de conta automático
+            ### 3. Primeira vez só (3 cliques)
+            1. Clique em **"📦 Instalar Podman/Docker"** (se o botão aparecer ativo — o app detecta se você já tem instalado)
+            2. Clique em **"🔨 Construir Imagem"** e espere (~15 minutos, só acontece uma vez — vá tomar um café)
+            3. Clique em **"🔍 Detectar"** ao lado do campo de IP e escolha a opção que aparecer (Hamachi, rede local, etc.)
 
-            O login do jogo funciona de forma totalmente automática — **não precisa de cadastro externo nem de senha**.
+            ### 4. Jogar
+            - Clique em **"▶ LIGAR SERVIDOR"** antes de chamar seus amigos
+            - Clique em **"■ DESLIGAR"** quando terminar (não fica consumindo memória/CPU do PC à toa)
 
-            Como funciona:
-            - Na tela de login do jogo, você digita qualquer nome no campo ID e clica em LOGIN
-            - O servidor detecta o nome digitado e **cria a conta automaticamente** se ela não existir
-            - O nickname que aparece para os outros jogadores (tela "SELECT ID") já é configurado automaticamente igual ao nome digitado
-            - Da próxima vez que a pessoa digitar o mesmo nome, ela entra na mesma conta
-
-            Isso foi necessário porque o navegador embutido do PCSX2 tem um bug: ao tentar enviar o formulário de login, ele faz uma requisição diferente do esperado. O servidor foi adaptado para interceptar esse comportamento e fazer o login/cadastro automaticamente.
-
-            ---
-
-            ### ⚠️ Aviso de segurança — servidor público
-
-            Este projeto foi desenvolvido **exclusivamente para uso privado entre amigos**.
-
-            O sistema de login automático **não tem autenticação real** — qualquer pessoa que saiba o IP do servidor consegue criar uma conta com qualquer nome, sem senha. Isso é intencional para facilitar o uso entre amigos em uma VPN privada (Hamachi, etc.), mas **não é seguro para um servidor público aberto na internet**.
-
-            Se quiser hospedar um servidor público, será necessário modificar o sistema de login no arquivo `config/autologin.php` e `config/login_form.php` para exigir senha real antes de criar ou acessar uma conta.
+            O app cuida sozinho de:
+            - ✅ Detectar e instalar o que falta (Podman no Linux / Docker Desktop no Windows)
+            - ✅ Corrigir configurações do sistema operacional que bloqueiam o servidor (AppArmor em Fedora/Ubuntu/Debian)
+            - ✅ Criar e gerenciar o container do servidor
+            - ✅ Abrir as portas certas automaticamente
 
             ---
 
-            ### Instalação
+            ## 🔑 Como funciona o login (automático, sem cadastro)
 
-            **Windows:**
-            1. Baixe e extraia `Servidor-RE-Outbreak-Windows.zip`
-            2. Execute `Servidor-RE-Outbreak.exe` (pode pedir pra instalar Docker Desktop — aceite)
-            3. Clique em "Construir Imagem" (só na primeira vez, ~15 min)
-            4. Configure o IP e clique em "Ligar Servidor" antes de jogar
+            Diferente do servidor oficial, aqui **não existe tela de cadastro separada**. Quando você ou seus amigos forem entrar no jogo:
 
-            **Linux:**
-            1. Baixe e extraia `Servidor-RE-Outbreak-Linux.zip`
-            2. `chmod +x Servidor-RE-Outbreak-Linux && ./Servidor-RE-Outbreak-Linux`
-            3. Mesmo processo acima
+            1. Na tela de login do jogo, digite **qualquer nome** no campo ID
+            2. Clique em LOGIN
+            3. Pronto — a conta é **criada na hora automaticamente**, com aquele nome já aparecendo certinho pros outros jogadores verem na sala
 
-            ### Como os jogadores conectam
-            - Configurar **DNS1 e DNS2 = IP do servidor** no PCSX2 e na tela de rede do jogo
-            - ISO precisa ser a **japonesa (NTSC-J)**
+            Da próxima vez, é só digitar o mesmo nome de novo pra continuar na mesma conta. Não precisa de senha, nem de site externo, nem de e-mail.
 
             ---
 
-            Baseado em [bioserver-docker](https://github.com/corbin-zip/bioserver-docker) e [obsrv.org](https://obsrv.org) — servidor feito por fãs para fãs desde 2013.
+            ## ⚠️ Importante: isso é pra jogar com amigos, não pra servidor público
+
+            Esse sistema de login automático **não tem segurança de verdade** — qualquer pessoa que souber o IP do seu servidor consegue criar uma conta com qualquer nome, sem senha. Isso é **proposital**, pra facilitar jogar com amigos numa rede privada (Hamachi, rede local, etc.).
+
+            **Não é seguro deixar esse servidor exposto pra internet pública sem mudanças.** Se você quiser fazer um servidor público de verdade, vai precisar editar os arquivos `config/autologin.php` e `config/login_form.php` pra adicionar autenticação de verdade (senha obrigatória, validação, etc.).
+
+            ---
+
+            ## 📌 O que você ainda precisa fazer manualmente
+
+            O app automatiza **tudo da parte do servidor**, mas algumas coisas continuam manuais porque estão fora do nosso controle:
+
+            - Instalar e configurar uma VPN (Hamachi ou similar) pra você e seus amigos ficarem na mesma rede — **ou** abrir as portas do servidor no seu roteador, se preferir IP público
+            - Configurar o **DNS1 e DNS2** no PCSX2 (Config → Rede) e dentro do próprio jogo, apontando pro IP do servidor — cada jogador faz isso uma vez só
+            - Ter a **ISO japonesa (NTSC-J)** do jogo — isso não fornecemos, é por conta de cada um
+
+            *(Tutorial detalhado dessas partes deve ser publicado separadamente.)*
+
+            ---
+
+            ## 🛠 Para quem quiser mexer no código
+
+            ```bash
+            git clone https://github.com/WesleyMenegoniMendes/resident-evil-outbreak-servidor-local.git
+            cd resident-evil-outbreak-servidor-local
+            python3 outbreak-server-setup.py   # Linux
+            python outbreak-server-setup.py    # Windows
+            ```
+
+            ---
+
+            ## Créditos
+
+            Criado por **Wesley Menegoni**.
+            Servidor baseado em [bioserver-docker](https://github.com/corbin-zip/bioserver-docker) e protocolo do [obsrv.org](https://obsrv.org) — fã-server da comunidade desde 2013.
           files: |
             windows-build/Servidor-RE-Outbreak-Windows.zip
             linux-build/Servidor-RE-Outbreak-Linux.zip
