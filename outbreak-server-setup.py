@@ -22,8 +22,17 @@ import re
 IS_WINDOWS = sys.platform == "win32"
 IS_LINUX   = sys.platform.startswith("linux")
 
-CONFIG_FILE    = os.path.join(os.path.dirname(os.path.abspath(__file__)), "server-config.json")
-DOCKERFILE_DIR = os.path.dirname(os.path.abspath(__file__))
+def _app_dir():
+    """Pasta onde o executável/script realmente está (funciona tanto rodando
+    como .py quanto como executável do PyInstaller, desde que o Dockerfile
+    e a pasta config/ estejam ao lado do executável, ex: dentro do .zip)."""
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(os.path.abspath(sys.executable))
+    return os.path.dirname(os.path.abspath(__file__))
+
+APP_DIR        = _app_dir()
+CONFIG_FILE    = os.path.join(APP_DIR, "server-config.json")
+DOCKERFILE_DIR = APP_DIR
 IMAGE_NAME     = "bioserver-docker"
 CONTAINER_NAME = "bioserver"
 PORTS = [
