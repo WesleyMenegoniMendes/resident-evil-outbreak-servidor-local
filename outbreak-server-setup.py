@@ -338,6 +338,8 @@ class OutbreakServerApp(tk.Tk):
         platform_label = "Linux  •  Podman" if IS_LINUX else "Windows  •  Docker Desktop"
         tk.Label(hdr, text=f"Resident Evil Outbreak File #1 e #2  —  {platform_label}",
                  font=("Consolas", 9), fg="#a0a0c0", bg="#16213e", pady=2).pack()
+        tk.Label(hdr, text="Criado por Wesley Menegoni",
+                 font=("Consolas", 8), fg="#606080", bg="#16213e", pady=(0, 6)).pack()
 
         # status
         sf = tk.LabelFrame(self, text="Status", bg="#1a1a2e", fg="#a0a0c0",

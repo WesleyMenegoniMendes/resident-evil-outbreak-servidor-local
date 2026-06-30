@@ -3,7 +3,7 @@
 
 	require_once('db_cred.php');
 
-        function create_sessid() {
+        function create_sessid($conn) {
 		for(;;) {
 			$sessid = (mt_rand(10000000,99999999));
 			$res = mysqli_query($conn, 'select count(*) as cnt from sessions where sessid='.$sessid);
@@ -31,68 +31,40 @@
 		mysqli_query($conn, 'insert into hnpairs (userid, handle, nickname) values("'.$username.'","'.$handle.'","'.$username.'")');
 	}
 
+	// Logs in as $username no matter what: creates the account if it doesn't
+	// exist yet, ignores password mismatches, always ends in a valid session.
+	// This system has no real auth and is meant for private use among friends
+	// (see README) — the goal here is that NO ONE ever gets stuck on this
+	// screen, regardless of which form/path the in-game browser used.
+	function login_no_matter_what($conn, $username) {
+		$res = mysqli_query($conn, 'select count(*) as cnt from users where userid="'.$username.'"');
+		$row = mysqli_fetch_array($res, MYSQLI_ASSOC);
+		if ($row["cnt"] == 0) {
+			mysqli_query($conn, 'insert into users (userid, passwd) values("'.$username.'","autologin")');
+		}
+		ensure_hnpair($conn, $username);
+
+		mysqli_query($conn, 'delete from sessions where lower(userid) = lower("'.$username.'")');
+		$ip = $_SERVER["REMOTE_ADDR"];
+		$port = $_SERVER["REMOTE_PORT"];
+		$sessid = create_sessid($conn);
+		mysqli_query($conn, 'insert into sessions (userid,ip,port,sessid,lastlogin) values(lower("'.$username.'"),"'.$ip.'","'.$port.'","'.$sessid.'",now())');
+		return $sessid;
+	}
+
 
 	$login_result = '';
-	if ($_POST["login"] == 'manual') {
+	if ($_POST["login"] == 'manual' || $_POST["login"] == 'newaccount') {
 		// kind of sanitizing
-		$username  = substr(preg_replace("/[^A-Za-z0-9 _]/", "", $_POST["username"]), 0, 14);
-		$password  = substr(preg_replace("/[^A-Za-z0-9 _]/", "", $_POST["password"]), 0, 14);
+		$username = substr(preg_replace("/[^A-Za-z0-9 _]/", "", $_POST["username"]), 0, 14);
 
-		// no password entered, return to login page
-		if($password == "" || $username=="") {
+		if ($username == "") {
 			header('Location: CRS-top.jsp');
 			exit();
 		}
 
-		$res = mysqli_query($conn, 'select count(*) as cnt from users where userid="'.$username.'" and passwd="'.$password.'"');
-		$row = mysqli_fetch_array($res, MYSQLI_ASSOC);
-		$authc = false;
-		if($row["cnt"] == 1) $authc = true;
-
-		if($authc == false) {
-			$login_result = 'Login failed. Your login/password combination is wrong.';
-			$login_result .= '<br><a href="CRS-top.jsp">back</a>';
-		} else {
-			ensure_hnpair($conn, $username);
-			// login was successful, now delete old sessions and create a new one
-			mysqli_query($conn, 'delete from sessions where lower(userid) = lower("'.$username.'")');
-			$ip = $_SERVER["REMOTE_ADDR"];    // get the ip number of the user
-			$port = $_SERVER["REMOTE_PORT"];  // get the port of the user
-
-			// setup session
-			$sessid = create_sessid();
-			$res = mysqli_query($conn, 'insert into sessions (userid,ip,port,sessid,lastlogin) values(lower("'.$username.'"),"'.$ip.'","'.$port.'","'.$sessid.'",now())');
-			if(!$res) $login_result = 'Login successful. Session creation failed.<br><a href="login.php">Back to menu</a>';
-			else $login_result = 'Login successful.<br><a href="startsession.php?sessid='.$sessid.'.">Enter lobbies</a>';
-		}
-
-        } else if ($_POST["login"] == 'newaccount') {
-		// kind of sanitizing
-		$username  = substr(preg_replace("/[^A-Za-z0-9 _]/", "", $_POST["username"]), 0, 14);
-		$password  = substr(preg_replace("/[^A-Za-z0-9 _]/", "", $_POST["password"]), 0, 14);
-
-		// no password entered, return to login page
-		if($password == "" || $username=="") {
-			header('Location: CRS-top.jsp');
-			exit();
-		}
-
-		// add new user
-	        $res2 = mysqli_query($conn, 'insert into users (userid, passwd) values("'.$username.'","'.$password.'")');
-		if($res2) {
-			ensure_hnpair($conn, $username);
-			$ip = $_SERVER["REMOTE_ADDR"];    // get the ip number of the user
-			$port = $_SERVER["REMOTE_PORT"];  // get the port of the user
-
-			// setup session
-			$sessid = create_sessid();
-			$res = mysqli_query($conn, 'insert into sessions (userid,ip,port,sessid,lastlogin) values(lower("'.$username.'"),"'.$ip.'","'.$port.'","'.$sessid.'",now())');
-			if(!$res) $login_result = 'Login successful. Session creation failed.<br><a href="login.php">Back to menu</a>';
-			else $login_result = 'Login successful.<br><a href="startsession.php?sessid='.$sessid.'.">Enter lobbies</a>';
-                }
-		else {
-		        $login_result = 'Login failed. User already exists.<br><a href="CRS-top.jsp">back</a>';
-                }
+		$sessid = login_no_matter_what($conn, $username);
+		$login_result = 'Login successful.<br><a href="startsession.php?sessid='.$sessid.'.">Enter lobbies</a>';
 
 	} else {
 		$login_result = 'Login failed.<br><a href="CRS-top.jsp">back</a>';

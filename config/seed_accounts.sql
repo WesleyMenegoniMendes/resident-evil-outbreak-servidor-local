@@ -1,13 +1,8 @@
-INSERT INTO users (userid, passwd) VALUES
-  ('wesley','autologin'),
-  ('nicolas','autologin'),
-  ('julia','autologin'),
-  ('samuel','autologin'),
-  ('Patrick','autologin');
-
-INSERT INTO hnpairs (userid, handle, nickname) VALUES
-  ('wesley','WESLEY','wesley'),
-  ('nicolas','NICOLA','nicolas'),
-  ('julia','JULIA1','julia'),
-  ('samuel','SAMUEL','samuel'),
-  ('Patrick','PATRIC','Patrick');
+-- Este arquivo é opcional. O sistema de login automático (autologin.php)
+-- já cria contas na hora pra qualquer nome digitado na tela de login do
+-- jogo, então não é necessário pré-cadastrar ninguém aqui.
+--
+-- Se quiser pré-criar contas fixas pros seus amigos, adicione linhas assim:
+--
+-- INSERT INTO users (userid, passwd) VALUES ('nomeaqui','autologin');
+-- INSERT INTO hnpairs (userid, handle, nickname) VALUES ('nomeaqui','HANDLE1','nomeaqui');
