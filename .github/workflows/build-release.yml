@@ -40,7 +40,7 @@ jobs:
             --name "Servidor-RE-Outbreak-Linux" \
             outbreak-server-setup.py
 
-      - name: Empacotar .zip (executável + Dockerfile + config)
+      - name: Empacotar .zip (executável + Dockerfile + config + atalho)
         run: |
           mkdir -p pacote/Servidor-RE-Outbreak
           cp dist/Servidor-RE-Outbreak-Linux pacote/Servidor-RE-Outbreak/
@@ -48,6 +48,44 @@ jobs:
           cp -r config pacote/Servidor-RE-Outbreak/
           cp Dockerfile pacote/Servidor-RE-Outbreak/
           cp outbreak-icon.ico pacote/Servidor-RE-Outbreak/
+
+          # script wrapper: garante permissão de execução antes de abrir
+          cat > pacote/Servidor-RE-Outbreak/abrir-servidor.sh << 'SCRIPT'
+          #!/bin/bash
+          DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+          chmod +x "$DIR/Servidor-RE-Outbreak-Linux"
+          "$DIR/Servidor-RE-Outbreak-Linux"
+          SCRIPT
+          chmod +x pacote/Servidor-RE-Outbreak/abrir-servidor.sh
+
+          # atalho .desktop clicável (duplo clique funciona na maioria dos gerenciadores)
+          cat > "pacote/Servidor-RE-Outbreak/Abrir Servidor.desktop" << 'DESKTOP'
+          [Desktop Entry]
+          Type=Application
+          Name=Servidor Resident Evil Outbreak
+          Comment=Abre o painel do servidor local do RE Outbreak
+          Exec=bash -c 'cd "$(dirname "%k" | sed "s|^file://||")" && ./abrir-servidor.sh'
+          Icon=outbreak-icon.ico
+          Terminal=false
+          Categories=Game;
+          DESKTOP
+          chmod +x "pacote/Servidor-RE-Outbreak/Abrir Servidor.desktop"
+
+          cat > "pacote/Servidor-RE-Outbreak/LEIA-ME.txt" << 'TXT'
+          COMO ABRIR O SERVIDOR (LINUX)
+
+          Opcao 1 (mais facil): clique com o botao direito em "Abrir Servidor.desktop"
+          e escolha "Executar" ou "Permitir Executar" se for perguntado, depois de
+          duplo clique nele.
+
+          Opcao 2: abra um terminal nesta pasta e rode:
+             ./abrir-servidor.sh
+
+          Se aparecer um aviso de "arquivo nao confiavel" ao abrir o .desktop,
+          isso e normal (e so um aviso de seguranca do sistema) - clique em
+          "Confiar e Executar" ou similar.
+          TXT
+
           cd pacote && zip -r ../Servidor-RE-Outbreak-Linux.zip Servidor-RE-Outbreak
 
       - name: Upload artefato Linux
