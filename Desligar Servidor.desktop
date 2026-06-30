@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Desligar Servidor Outbreak
+Comment=Desliga o servidor local do Resident Evil Outbreak
+Exec=konsole -e bash -c "'/home/wesleym/Área de trabalho/Servidor - Outbreak/parar-servidor.sh'; read -p 'Pressione Enter para fechar...'"
+Icon=media-playback-stop
+Terminal=false
+Categories=Game;

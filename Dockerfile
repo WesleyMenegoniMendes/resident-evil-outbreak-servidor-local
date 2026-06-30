@@ -1,4 +1,4 @@
-FROM debian:latest
+FROM debian:bullseye
 
 # install dependencies
 RUN apt-get update && apt-get install -y \
@@ -34,9 +34,9 @@ RUN ldconfig
 # the top of the document as a variable or loaded externally
 WORKDIR /root
 
-RUN curl -o httpd.tar.gz https://dlcdn.apache.org/httpd/httpd-2.4.56.tar.gz \
-    && curl -o apr.tar.gz https://dlcdn.apache.org//apr/apr-1.7.2.tar.gz \
-    && curl -o apr-util.tar.gz https://dlcdn.apache.org//apr/apr-util-1.6.3.tar.gz \
+RUN curl -o httpd.tar.gz https://archive.apache.org/dist/httpd/httpd-2.4.56.tar.gz \
+    && curl -o apr.tar.gz https://archive.apache.org/dist/apr/apr-1.7.2.tar.gz \
+    && curl -o apr-util.tar.gz https://archive.apache.org/dist/apr/apr-util-1.6.3.tar.gz \
     && tar -xzvf /root/httpd.tar.gz \
     && mv httpd-* httpd
 
@@ -80,6 +80,13 @@ RUN mkdir /var/www/bhof1 \
     && ln -s /var/www/bhof1 /var/www/dnas/00000002 \
     && ln -s /var/www/bhof2 /var/www/dnas/00000010
 
+# custom autologin (catches the in-game browser's broken LOGIN button GET request)
+# and the matching login_form.php (adds default ID/HN nickname for any new account)
+COPY --chown=www-data:www-data ./config/autologin.php /var/www/bhof1/autologin.php
+COPY --chown=www-data:www-data ./config/autologin.php /var/www/bhof2/autologin.php
+COPY --chown=www-data:www-data ./config/login_form.php /var/www/bhof1/login_form.php
+COPY --chown=www-data:www-data ./config/login_form.php /var/www/bhof2/login_form.php
+
 # NOTE: another version to pay attention to
 RUN wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-j_8.0.32-1debian11_all.deb \
     && dpkg --install mysql-connector-j_8.0.32-1debian11_all.deb
@@ -121,6 +128,7 @@ RUN mkdir /run/php/ \
 COPY ./config/entrypoint.sh /root/
 COPY ./config/obcomsrv /etc/dnsmasq.d/
 COPY ./config/end_of_httpd.conf /root/
+COPY ./config/seed_accounts.sql /root/
 
 # possibly some extra ports here but i believe the 8xxx ports are required for outbreak
 EXPOSE 53

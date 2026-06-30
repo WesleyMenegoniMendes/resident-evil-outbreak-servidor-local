@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Ligar Servidor Outbreak
+Comment=Liga o servidor local do Resident Evil Outbreak
+Exec=konsole -e bash -c "'/home/wesleym/Área de trabalho/Servidor - Outbreak/iniciar-servidor.sh'; read -p 'Pressione Enter para fechar...'"
+Icon=media-playback-start
+Terminal=false
+Categories=Game;

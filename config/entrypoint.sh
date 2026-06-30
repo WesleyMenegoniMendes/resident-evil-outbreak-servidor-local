@@ -13,9 +13,9 @@ if [ ! -f /root/already-configured ]; then
 	# replace {{CONTAINER_IP}} & {{EXTERNAL_IP}} with hostname -i
 	# NOTE: i need a way for the user to specify any IP they want
 	# but i -think- that listen-address should be local? could be wrong, need to test
-	sed -i "s/{{CONTAINER_IP}}/$(hostname -i)/g" /etc/dnsmasq.d/obcomsrv
-	sed -i "s/{{EXTERNAL_IP}}/$(hostname -i)/g" /root/bioserver/bioserv1/config.properties
-	sed -i "s/{{EXTERNAL_IP}}/$(hostname -i)/g" /root/bioserver/bioserv2/config.properties
+	sed -i "s/{{CONTAINER_IP}}/25.44.159.240/g" /etc/dnsmasq.d/obcomsrv
+	sed -i "s/{{EXTERNAL_IP}}/25.44.159.240/g" /root/bioserver/bioserv1/config.properties
+	sed -i "s/{{EXTERNAL_IP}}/25.44.159.240/g" /root/bioserver/bioserv2/config.properties
 	sed -i "s/#listen-address=/listen-address=$(hostname -i),127.0.0.1/g" /etc/dnsmasq.conf
 
 	# use sed to uncomment these 4 lines inside of httpd.conf
@@ -30,6 +30,10 @@ if [ ! -f /root/already-configured ]; then
 	# set up mysql
 	mysql -u root </root/bioserver/bioserv1/database/bioserver.sql
 	mysql -u root </root/bioserver/bioserv2/database/bioserver.sql
+
+	# pre-create accounts (wesley, nicolas, julia, samuel, Patrick) in both games
+	mysql -u root bioserver </root/seed_accounts.sql
+	mysql -u root bioserver2 </root/seed_accounts.sql
 
 	# mark this container as configured (so it does not run this configuration again)
 	touch /root/already-configured

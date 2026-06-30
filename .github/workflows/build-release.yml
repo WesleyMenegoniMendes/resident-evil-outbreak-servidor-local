@@ -1,0 +1,129 @@
+name: Build Release
+
+on:
+  push:
+    tags:
+      - "v*"            # dispara em qualquer tag tipo v1.0, v1.1, etc.
+  workflow_dispatch:    # também pode disparar manualmente no GitHub
+
+jobs:
+
+  # -----------------------------------------------------------------------
+  # Linux: gera executável nativo ELF
+  # -----------------------------------------------------------------------
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependências
+        run: |
+          pip install pyinstaller pillow
+          sudo apt-get install -y python3-tk
+
+      - name: Converter PNG para ICO
+        run: |
+          python3 -c "
+          from PIL import Image
+          img = Image.open('resident_evil_outbreak_file__1_icon_by_christian_7_d8r1e26-375w-2x.png')
+          img.save('outbreak-icon.ico', format='ICO', sizes=[(256,256),(128,128),(64,64),(48,48),(32,32),(16,16)])
+          "
+
+      - name: Build Linux
+        run: |
+          pyinstaller --onefile --windowed \
+            --name "Servidor-RE-Outbreak-Linux" \
+            --add-data "outbreak-icon.ico:." \
+            outbreak-server-setup.py
+
+      - name: Upload artefato Linux
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          path: dist/Servidor-RE-Outbreak-Linux
+
+  # -----------------------------------------------------------------------
+  # Windows: gera .exe
+  # -----------------------------------------------------------------------
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependências
+        run: pip install pyinstaller pillow
+
+      - name: Converter PNG para ICO
+        run: |
+          python -c "
+          from PIL import Image
+          img = Image.open('resident_evil_outbreak_file__1_icon_by_christian_7_d8r1e26-375w-2x.png')
+          img.save('outbreak-icon.ico', format='ICO', sizes=[(256,256),(128,128),(64,64),(48,48),(32,32),(16,16)])
+          "
+
+      - name: Build Windows
+        run: |
+          pyinstaller --onefile --windowed `
+            --name "Servidor-RE-Outbreak" `
+            --icon "outbreak-icon.ico" `
+            --add-data "outbreak-icon.ico;." `
+            outbreak-server-setup.py
+
+      - name: Upload artefato Windows
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: dist/Servidor-RE-Outbreak.exe
+
+  # -----------------------------------------------------------------------
+  # Publicar na Release do GitHub com os dois arquivos
+  # -----------------------------------------------------------------------
+  release:
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - name: Download artefatos
+        uses: actions/download-artifact@v4
+
+      - name: Criar Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Servidor RE Outbreak ${{ github.ref_name }}"
+          body: |
+            ## Servidor Privado — Resident Evil Outbreak File #1 e #2
+
+            Permite jogar online no seu próprio servidor, sem depender do obsrv.org.
+            Sem lag, sem zumbi teleportando, sem depender de servidor nos EUA.
+
+            ### Instalação
+
+            **Windows:**
+            1. Baixe `Servidor-RE-Outbreak.exe`
+            2. Execute (pode pedir pra instalar Docker Desktop — aceite)
+            3. Clique em "Construir Imagem" (só na primeira vez, ~15 min)
+            4. Configure o IP e clique em "Ligar Servidor" antes de jogar
+
+            **Linux:**
+            1. Baixe `Servidor-RE-Outbreak-Linux`
+            2. `chmod +x Servidor-RE-Outbreak-Linux && ./Servidor-RE-Outbreak-Linux`
+            3. Mesmo processo acima
+
+            ### Como os jogadores conectam
+            - Configurar **DNS1 e DNS2 = IP do servidor** no PCSX2 e na tela de rede do jogo
+            - ISO precisa ser a **japonesa (NTSC-J)**
+          files: |
+            windows-build/Servidor-RE-Outbreak.exe
+            linux-build/Servidor-RE-Outbreak-Linux

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Painel do Servidor Outbreak
+Comment=Abre o painel de controle do servidor local do RE Outbreak
+Exec=bash -c 'cd "$(dirname "$(readlink -f "%k")")" && ./abrir-servidor.sh'
+Icon=/home/wesleym/Área de trabalho/Servidor - Outbreak/resident_evil_outbreak_file__1_icon_by_christian_7_d8r1e26-375w-2x.png
+Terminal=false
+Categories=Game;

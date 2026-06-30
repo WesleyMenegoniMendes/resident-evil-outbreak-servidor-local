@@ -1,0 +1,10 @@
+build/
+dist/
+*.spec
+__pycache__/
+server-config.json
+*.pnach
+*.md
+NOTAS-SERVIDOR.md
+README.md
+run-ligar.sh
